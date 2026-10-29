@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:b940db44-33aa-4e5d-b6f3-3718c63b8b7c",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "permissionDenied",
+    "inResponseTo": {
+      "id": "urn:uuid:4bf94398-a768-4b3b-84f8-a9beb1b5dc8d",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+    },
+    "message": "permission denied: forbidden: keys/sign-csr denied: did:key:z6Mkkc24aWH6Lrj4bqjG3q41v3Smcw9DdhMz4NgdrJ7iw4sX does not carry the sign-csr capability",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "zNRNWv1rL7k86QV48aaXHZdWkfVbHqRfvteBi3mrnq4KACKkdrUrJYWoFox63GYSYKxcTqtM6XLQQGLBR3QfHrwZ",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6Mkkc24aWH6Lrj4bqjG3q41v3Smcw9DdhMz4NgdrJ7iw4sX",
+  "threadId": "urn:uuid:4bf94398-a768-4b3b-84f8-a9beb1b5dc8d",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

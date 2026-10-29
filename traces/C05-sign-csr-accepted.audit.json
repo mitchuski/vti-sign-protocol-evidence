@@ -1,0 +1,13 @@
+[
+  {
+    "action": "keys.sign-csr",
+    "actor": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+    "channel": "trust-task",
+    "contextId": "community",
+    "detail": "subject=C=DE,O=Example Community e.V.,organizationIdentifier=LEIXG-5299000EXAMPLE000001,CN=Example Community Verifier san=dns:verifier.community.example,uri:https://verifier.community.example sha256=915fb5d58155370061cd29f315606f05c1ff908dcbb2ac780639059e9ef5c09b",
+    "id": "4df2ea51-5918-4157-979c-9441eb965e7a",
+    "outcome": "success",
+    "resource": "eudi-access-p256",
+    "timestamp": 1793285011
+  }
+]

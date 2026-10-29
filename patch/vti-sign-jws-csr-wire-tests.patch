@@ -1,0 +1,1362 @@
+diff --git a/vta-service/src/trust_tasks/keys.rs b/vta-service/src/trust_tasks/keys.rs
+index 70d5512d..08b67e27 100644
+--- a/vta-service/src/trust_tasks/keys.rs
++++ b/vta-service/src/trust_tasks/keys.rs
+@@ -1372,3 +1372,7 @@ mod import_wrapping_key_tests {
+ #[cfg(test)]
+ #[path = "sign_document_tests.rs"]
+ mod sign_document_tests;
++
++#[cfg(test)]
++#[path = "sign_protocol_tests.rs"]
++mod sign_protocol_tests;
+diff --git a/vta-service/src/trust_tasks/sign_protocol_tests.rs b/vta-service/src/trust_tasks/sign_protocol_tests.rs
+new file mode 100644
+index 00000000..2fe2bb66
+--- /dev/null
++++ b/vta-service/src/trust_tasks/sign_protocol_tests.rs
+@@ -0,0 +1,1095 @@
++//! `keys/sign-jws/0.1` and `keys/sign-csr/0.1` through the dispatch spine: a
++//! signed Trust Task document in, the VTA's signed answer out, each case
++//! asserted by what reaches the wire — the `#response` variant for an accepted
++//! request, a `trust-task-error` carrying the declared code (and no JWS or CSR)
++//! for a refused one — and by the audit rows the attempt left.
++//!
++//! The operation-level tests in `operations::keys` hold the same rules one layer
++//! down; these hold the wire contract the specifications state.
++//!
++//! When `VTI_EVIDENCE_DIR` is set, every exchange is also written there as
++//! `<case>.request.json`, `<case>.response.json` and `<case>.audit.json`, so a
++//! run can be kept as a reviewable trace. Unset, nothing is written.
++
++use super::*;
++use crate::acl::Role;
++use crate::test_support::{build_signing_test_app_state_with_sink, did_for_seed, sign_as};
++use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
++use sha2::{Digest, Sha256};
++use std::sync::Arc;
++use tokio::sync::Mutex;
++use trust_tasks_rs::validate::ValidatedPayload;
++use vta_sdk::jws::JwsKey;
++use vta_sdk::keys::{KeyStatus, KeyType};
++use vta_sdk::protocols::audit_management::list::AuditLogEntry;
++use vti_common::acl::{AclEntry, Capability, store_acl_entry};
++
++const CTX: &str = "community";
++const JWS: &str = "https://trusttasks.org/spec/keys/sign-jws/0.1";
++const CSR: &str = "https://trusttasks.org/spec/keys/sign-csr/0.1";
++const SIGN: &str = "https://trusttasks.org/spec/keys/sign/0.1";
++const ERROR_TYPE_PREFIX: &str = "https://trusttasks.org/spec/trust-task-error/";
++
++/// The verifier key the specification's examples name.
++const JWS_KEY: &str = "verifier-p256";
++/// The access-certificate key the specification's examples name.
++const CSR_KEY: &str = "eudi-access-p256";
++
++/// Test-only caller seeds (the private key is `[seed; 32]`).
++const PRODUCER_SEED: u8 = 0x71;
++
++#[derive(Default)]
++struct Rows(Mutex<Vec<AuditLogEntry>>);
++
++#[async_trait::async_trait]
++impl vta_audit::AuditSink for Rows {
++    async fn record(&self, entry: &AuditLogEntry) -> Result<(), crate::error::AppError> {
++        self.0.lock().await.push(entry.clone());
++        Ok(())
++    }
++}
++
++struct Fixture {
++    state: AppState,
++    _dir: tempfile::TempDir,
++    rows: Arc<Rows>,
++}
++
++impl Fixture {
++    /// A VTA with a `community` context holding a P-256 key for each task, an
++    /// Ed25519 key, and two key types neither task signs with.
++    async fn new() -> Self {
++        let rows = Arc::new(Rows::default());
++        let (state, dir) = build_signing_test_app_state_with_sink(Some(rows.clone())).await;
++        crate::contexts::create_context(&state.contexts_ks, CTX, CTX)
++            .await
++            .expect("create context");
++        let f = Self {
++            state,
++            _dir: dir,
++            rows,
++        };
++        f.mint(JWS_KEY, KeyType::P256).await;
++        f.mint(CSR_KEY, KeyType::P256).await;
++        f.mint("verifier-ed25519", KeyType::Ed25519).await;
++        f.mint("agreement-x25519", KeyType::X25519).await;
++        f.mint("pq-mldsa44", KeyType::MlDsa44).await;
++        f
++    }
++
++    async fn mint(&self, key_id: &str, key_type: KeyType) {
++        operations::keys::create_key(
++            &self.state.keys_ks,
++            &self.state.internal_ks,
++            &self.state.contexts_ks,
++            &self.state.seed_store,
++            &self.state.audit_sink,
++            &self.state.acl_ks,
++            &crate::test_support::super_admin_claims(),
++            operations::keys::CreateKeyParams {
++                internal: false,
++                key_type,
++                derivation_path: None,
++                key_id: Some(key_id.to_string()),
++                mnemonic: None,
++                label: None,
++                context_id: Some(CTX.to_string()),
++            },
++            "test",
++        )
++        .await
++        .unwrap_or_else(|e| panic!("mint {key_id}: {e:?}"));
++    }
++
++    async fn record(&self, key_id: &str) -> vta_sdk::keys::KeyRecord {
++        self.state
++            .keys_ks
++            .get(crate::keys::store_key(key_id))
++            .await
++            .unwrap()
++            .expect("key record")
++    }
++
++    async fn public(&self, key_id: &str) -> JwsKey {
++        JwsKey::from_did_key(&format!("did:key:{}", self.record(key_id).await.public_key))
++            .expect("a did:key")
++    }
++
++    /// The producer, an application of `CTX`, with an ACL entry narrowed to
++    /// `capabilities`.
++    async fn producer(&self, seed: u8, role: Role, capabilities: Vec<Capability>) -> AuthClaims {
++        let (did, _) = did_for_seed(seed);
++        store_acl_entry(
++            &self.state.acl_ks,
++            &AclEntry::new(&did, role.clone(), "did:key:zRoot")
++                .with_contexts(vec![CTX.to_string()])
++                .with_capabilities(capabilities),
++        )
++        .await
++        .expect("store the producer's entry");
++        AuthClaims {
++            did,
++            role,
++            allowed_contexts: vec![CTX.to_string()],
++            session_id: "test-session".into(),
++            ..Default::default()
++        }
++    }
++
++    /// Send `payload` as a signed `task` document from `seed` through the
++    /// dispatch spine, and return (request document, response document, the
++    /// `keys.sign*` audit rows this exchange added).
++    async fn send(
++        &self,
++        case: &str,
++        seed: u8,
++        auth: &AuthClaims,
++        task: &str,
++        payload: Value,
++    ) -> (Value, Value, Vec<AuditLogEntry>) {
++        let before = self.rows.0.lock().await.len();
++        let vta_did = self
++            .state
++            .config
++            .read()
++            .await
++            .vta_did
++            .clone()
++            .expect("vta_did");
++        let mut doc: TrustTask<Value> = serde_json::from_value(serde_json::json!({
++            "id": format!("urn:uuid:{}", uuid::Uuid::new_v4()),
++            "type": task,
++            "issuer": auth.did,
++            "recipient": vta_did,
++            "issuedAt": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
++            "payload": payload,
++        }))
++        .expect("a Trust Task document");
++        sign_as(seed, &mut doc);
++        let request = serde_json::to_value(&doc).unwrap();
++        let out = super::super::dispatch_trust_task_core(
++            &self.state,
++            auth,
++            &serde_json::to_vec(&doc).unwrap(),
++            super::super::transport::TransportConfidentiality::EndToEnd,
++        )
++        .await;
++        let response: Value = serde_json::from_slice(&out.body).expect("a JSON document");
++        let audit: Vec<AuditLogEntry> = self.rows.0.lock().await[before..]
++            .iter()
++            .filter(|r| r.action.starts_with("keys.sign"))
++            .cloned()
++            .collect();
++        evidence(case, &request, &response, &audit);
++        (request, response, audit)
++    }
++}
++
++/// Write one exchange to `VTI_EVIDENCE_DIR`, when it is set.
++fn evidence(case: &str, request: &Value, response: &Value, audit: &[AuditLogEntry]) {
++    let Some(dir) = std::env::var_os("VTI_EVIDENCE_DIR") else {
++        return;
++    };
++    let dir = std::path::PathBuf::from(dir);
++    std::fs::create_dir_all(&dir).expect("evidence dir");
++    let write = |suffix: &str, v: &Value| {
++        std::fs::write(
++            dir.join(format!("{case}.{suffix}.json")),
++            serde_json::to_string_pretty(v).unwrap() + "\n",
++        )
++        .expect("write evidence");
++    };
++    write("request", request);
++    write("response", response);
++    write(
++        "audit",
++        &serde_json::to_value(audit).expect("audit rows serialise"),
++    );
++}
++
++fn is_error(resp: &Value) -> bool {
++    resp["type"]
++        .as_str()
++        .is_some_and(|t| t.starts_with(ERROR_TYPE_PREFIX))
++}
++
++fn code(resp: &Value) -> &str {
++    resp.pointer("/payload/code")
++        .and_then(Value::as_str)
++        .unwrap_or_default()
++}
++
++/// A refusal: a `trust-task-error` with `code`, answering the request, with
++/// neither a JWS nor a CSR in it, and no signing row in the audit trail.
++fn assert_refused(case: &str, req: &Value, resp: &Value, audit: &[AuditLogEntry], want: &str) {
++    assert!(is_error(resp), "{case}: not a trust-task-error: {resp:#}");
++    assert_eq!(code(resp), want, "{case}: {resp:#}");
++    assert_eq!(
++        resp.pointer("/payload/inResponseTo/id"),
++        req.get("id"),
++        "{case}: answers the request"
++    );
++    assert!(
++        resp.pointer("/payload/jws").is_none() && resp.pointer("/payload/csr").is_none(),
++        "{case}: a refusal carries no signature: {resp:#}"
++    );
++    assert!(audit.is_empty(), "{case}: nothing was signed: {audit:?}");
++}
++
++/// The specification's example request (`keys/sign-jws/0.1`, "An OpenID4VP
++/// request object, signed with a P-256 key").
++fn spec_jws_request() -> Value {
++    serde_json::json!({
++        "keyId": JWS_KEY,
++        "header": {
++            "typ": "oauth-authz-req+jwt",
++            "kid": "did:example:community-verifier#key-1"
++        },
++        "payload": {
++            "aud": "https://self-issued.me/v2",
++            "client_id": "decentralized_identifier:did:example:community-verifier",
++            "response_type": "vp_token",
++            "response_mode": "direct_post.jwt",
++            "response_uri": "https://community.example/v1/oid4vp/response/7d1e4c2a",
++            "nonce": "q8vTt3yN5mQ0aW2f",
++            "state": "7d1e4c2a",
++            "dcql_query": {
++                "credentials": [{
++                    "id": "membership",
++                    "format": "dc+sd-jwt",
++                    "meta": { "vct_values": ["https://credentials.example/membership"] }
++                }]
++            },
++            "iat": 1791709200,
++            "exp": 1791709500
++        }
++    })
++}
++
++/// The specification's example JWS; its first two segments are fixed by the
++/// request, its third is randomised (ECDSA).
++const SPEC_JWS: &str = "eyJhbGciOiJFUzI1NiIsImtpZCI6ImRpZDpleGFtcGxlOmNvbW11bml0eS12ZXJpZmllciNrZXktMSIsInR5cCI6Im9hdXRoLWF1dGh6LXJlcStqd3QifQ.eyJhdWQiOiJodHRwczovL3NlbGYtaXNzdWVkLm1lL3YyIiwiY2xpZW50X2lkIjoiZGVjZW50cmFsaXplZF9pZGVudGlmaWVyOmRpZDpleGFtcGxlOmNvbW11bml0eS12ZXJpZmllciIsImRjcWxfcXVlcnkiOnsiY3JlZGVudGlhbHMiOlt7ImZvcm1hdCI6ImRjK3NkLWp3dCIsImlkIjoibWVtYmVyc2hpcCIsIm1ldGEiOnsidmN0X3ZhbHVlcyI6WyJodHRwczovL2NyZWRlbnRpYWxzLmV4YW1wbGUvbWVtYmVyc2hpcCJdfX1dfSwiZXhwIjoxNzkxNzA5NTAwLCJpYXQiOjE3OTE3MDkyMDAsIm5vbmNlIjoicTh2VHQzeU41bVEwYVcyZiIsInJlc3BvbnNlX21vZGUiOiJkaXJlY3RfcG9zdC5qd3QiLCJyZXNwb25zZV90eXBlIjoidnBfdG9rZW4iLCJyZXNwb25zZV91cmkiOiJodHRwczovL2NvbW11bml0eS5leGFtcGxlL3YxL29pZDR2cC9yZXNwb25zZS83ZDFlNGMyYSIsInN0YXRlIjoiN2QxZTRjMmEifQ.9w2it71b0W3qKXW-vPPTvwCxJo7tGZgH5Fqn9oSFJMgaaYKlt3GS1GQAbXKfOYl51eZ3a8FJzoRwXctc4oiUvg";
++const SPEC_JWS_KEY: &str = "did:key:zDnaeTZCJom8WYgWfqp7ubMUwHK9ayrv31SSBJACRDDFiazq7";
++const SPEC_JWS_DIGEST: &str = "e0c236e3a90999a1ab54699f308c0ad0468405da185731762396cd733e031257";
++
++/// The specification's example request (`keys/sign-csr/0.1`, "A request for an
++/// EUDI relying-party access certificate").
++fn spec_csr_request() -> Value {
++    serde_json::json!({
++        "keyId": CSR_KEY,
++        "subject": [
++            { "type": "C", "value": "DE" },
++            { "type": "O", "value": "Example Community e.V." },
++            { "type": "organizationIdentifier", "value": "LEIXG-5299000EXAMPLE000001" },
++            { "type": "CN", "value": "Example Community Verifier" }
++        ],
++        "subjectAltNames": {
++            "dns": ["verifier.community.example"],
++            "uri": ["https://verifier.community.example"]
++        }
++    })
++}
++
++const SPEC_CSR: &str = "-----BEGIN CERTIFICATE REQUEST-----\nMIIBjzCCATYCAQAweDELMAkGA1UEBhMCREUxHzAdBgNVBAoMFkV4YW1wbGUgQ29t\nbXVuaXR5IGUuVi4xIzAhBgNVBGEMGkxFSVhHLTUyOTkwMDBFWEFNUExFMDAwMDAx\nMSMwIQYDVQQDDBpFeGFtcGxlIENvbW11bml0eSBWZXJpZmllcjBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABPeQCDiwlBbsbMalmpZyIBiXUMwKLUsPdS9cdMUqT5BK\n82pnE50hQM83H375pOf/nBtaNQboR0m18jFARbmBbD+gXDBaBgkqhkiG9w0BCQ4x\nTTBLMEkGA1UdEQRCMECCGnZlcmlmaWVyLmNvbW11bml0eS5leGFtcGxlhiJodHRw\nczovL3ZlcmlmaWVyLmNvbW11bml0eS5leGFtcGxlMAoGCCqGSM49BAMCA0cAMEQC\nIEiJ000jPd1gG5qAM+WaNYAc+RpApmiSAn7Mvw+i3ODfAiBwV/5C5DQzAAmXbxxr\nFmoRrcONsMPAjGP1XarGPxBspA==\n-----END CERTIFICATE REQUEST-----\n";
++const SPEC_CSR_KEY: &str = "did:key:zDnaezKfW1F36Bc3ranfFMiPJXexoqUeHSYLeQwGns4npGdh3";
++
++/// The DER of `der`'s first inner element: for a `CertificationRequest`, its
++/// `CertificationRequestInfo`.
++fn first_inner_element(der: &[u8]) -> &[u8] {
++    fn header(b: &[u8]) -> (usize, usize) {
++        // (header length, content length) of the TLV at the start of `b`.
++        match b[1] {
++            n if n < 0x80 => (2, n as usize),
++            0x81 => (3, b[2] as usize),
++            0x82 => (4, ((b[2] as usize) << 8) | b[3] as usize),
++            other => panic!("unsupported DER length form {other:#x}"),
++        }
++    }
++    let (outer, _) = header(der);
++    let inner = &der[outer..];
++    let (h, len) = header(inner);
++    &inner[..h + len]
++}
++
++fn pem_der(pem: &str) -> Vec<u8> {
++    let body: String = pem.lines().filter(|l| !l.starts_with("-----")).collect();
++    STANDARD.decode(body).expect("PEM base64")
++}
++
++// ── keys/sign-jws/0.1 ────────────────────────────────────────────────────
++
++/// The specification's own example JWS verifies under the key it names, and
++/// its signing input has the digest the audit line is said to record.
++#[test]
++fn sign_jws_spec_example_verifies() {
++    let key = JwsKey::from_did_key(SPEC_JWS_KEY).unwrap();
++    key.verify_compact(SPEC_JWS)
++        .expect("the spec's JWS verifies");
++    let input = SPEC_JWS.rsplit_once('.').unwrap().0;
++    assert_eq!(
++        hex::encode(Sha256::digest(input.as_bytes())),
++        SPEC_JWS_DIGEST
++    );
++}
++
++/// C01 / Conformance items 4, 7, 8 and Audit: the specification's request,
++/// sent to the VTA, comes back as the `#response` variant; `alg` is ES256 from
++/// the key; the header and payload segments are byte-for-byte the
++/// specification's (RFC 8785); the JWS verifies under the VTA-held key; the
++/// response validates against the response schema; and the one audit row is
++/// `keys.sign-jws` with `alg`, `typ` and the signing-input digest — never the
++/// payload.
++#[tokio::test]
++async fn sign_jws_spec_request_is_answered_with_a_verifiable_jws() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignJws])
++        .await;
++    let (req, resp, audit) = f
++        .send(
++            "C01-sign-jws-accepted",
++            PRODUCER_SEED,
++            &auth,
++            JWS,
++            spec_jws_request(),
++        )
++        .await;
++    assert_eq!(resp["type"], format!("{JWS}#response"), "{resp:#}");
++    assert_eq!(resp["threadId"], req["id"]);
++    assert!(resp["proof"].is_object(), "the answer is signed: {resp:#}");
++    let p = &resp["payload"];
++    assert_eq!(p["keyId"], JWS_KEY);
++    assert_eq!(p["alg"], "ES256");
++    trust_tasks_rs::specs::keys::sign_jws::v0_1::Response::validate_value(p)
++        .expect("the response validates against its schema");
++
++    let jws = p["jws"].as_str().unwrap();
++    let (input, _sig) = jws.rsplit_once('.').unwrap();
++    assert_eq!(
++        input,
++        SPEC_JWS.rsplit_once('.').unwrap().0,
++        "header and payload segments are the specification's"
++    );
++    assert_eq!(
++        hex::encode(Sha256::digest(input.as_bytes())),
++        SPEC_JWS_DIGEST
++    );
++    let claims = f
++        .public(JWS_KEY)
++        .await
++        .verify_compact(jws)
++        .expect("verifies");
++    assert_eq!(claims["nonce"], "q8vTt3yN5mQ0aW2f");
++    assert!(
++        JwsKey::from_did_key(SPEC_JWS_KEY)
++            .unwrap()
++            .verify_compact(jws)
++            .is_err(),
++        "and under no other key"
++    );
++
++    assert_eq!(audit.len(), 1, "{audit:?}");
++    assert_eq!(audit[0].action, "keys.sign-jws");
++    assert_eq!(audit[0].resource.as_deref(), Some(JWS_KEY));
++    let detail = audit[0].detail.as_deref().unwrap_or_default();
++    assert_eq!(
++        detail,
++        format!("alg=ES256 typ=oauth-authz-req+jwt sha256={SPEC_JWS_DIGEST}")
++    );
++    assert!(
++        !detail.contains("q8vTt3yN5mQ0aW2f"),
++        "no payload in the audit"
++    );
++}
++
++/// Conformance item 4: an Ed25519 key signs `EdDSA`; `payloadBase64Url` is
++/// carried unchanged as the payload segment.
++#[tokio::test]
++async fn sign_jws_ed25519_and_payload_base64url() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignJws])
++        .await;
++    let (_, resp, audit) = f
++        .send(
++            "sign-jws-ed25519-payloadBase64Url-accepted",
++            PRODUCER_SEED,
++            &auth,
++            JWS,
++            serde_json::json!({
++                "keyId": "verifier-ed25519",
++                "header": { "typ": "example+jwt" },
++                "payloadBase64Url": "aGVsbG8"
++            }),
++        )
++        .await;
++    assert_eq!(resp["type"], format!("{JWS}#response"), "{resp:#}");
++    assert_eq!(resp["payload"]["alg"], "EdDSA");
++    let jws = resp["payload"]["jws"].as_str().unwrap();
++    assert_eq!(jws.split('.').nth(1), Some("aGVsbG8"));
++    let key = f.public("verifier-ed25519").await;
++    let (input, sig) = jws.rsplit_once('.').unwrap();
++    key.verify_signature(input.as_bytes(), &URL_SAFE_NO_PAD.decode(sig).unwrap())
++        .expect("EdDSA over the signing input");
++    assert_eq!(audit.len(), 1);
++}
++
++/// C02 / Conformance item 5: every forbidden header member is refused with
++/// `keys/sign-jws:headerMemberForbidden` naming it in `details.member` — a
++/// `trust-task-error`, never a `#response`, and nothing signed.
++#[tokio::test]
++async fn sign_jws_forbidden_header_members_are_refused_on_the_wire() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignJws])
++        .await;
++    for (member, value) in [
++        ("alg", serde_json::json!("none")),
++        ("crit", serde_json::json!(["exp"])),
++        ("b64", serde_json::json!(false)),
++        (
++            "jwk",
++            serde_json::json!({ "kty": "EC", "crv": "P-256", "x": "AA", "y": "AA" }),
++        ),
++        (
++            "jku",
++            serde_json::json!("https://attacker.example/jwks.json"),
++        ),
++        (
++            "x5u",
++            serde_json::json!("https://attacker.example/chain.pem"),
++        ),
++    ] {
++        let mut payload = spec_jws_request();
++        payload["header"][member] = value;
++        let case = format!("C02-sign-jws-header-{member}-refused");
++        let (req, resp, audit) = f.send(&case, PRODUCER_SEED, &auth, JWS, payload).await;
++        assert_refused(
++            &case,
++            &req,
++            &resp,
++            &audit,
++            "keys/sign-jws:headerMemberForbidden",
++        );
++        assert_eq!(resp["payload"]["details"]["member"], member, "{resp:#}");
++        assert_eq!(resp["payload"]["retryable"], false, "{resp:#}");
++    }
++}
++
++/// Conformance item 6: a registered member of the wrong type, and an `x5c`
++/// that is not a certificate for the named key, are `keys:invalidArgument`.
++#[tokio::test]
++async fn sign_jws_unusable_registered_members_are_invalid_arguments() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignJws])
++        .await;
++    for (name, header) in [
++        ("typ-not-string", serde_json::json!({ "typ": 1 })),
++        ("kid-not-string", serde_json::json!({ "kid": ["a"] })),
++        (
++            "x5t-not-base64url",
++            serde_json::json!({ "x5t": "not base64url!" }),
++        ),
++        (
++            "x5c-not-a-certificate",
++            serde_json::json!({ "x5c": [STANDARD.encode(b"not a certificate")] }),
++        ),
++    ] {
++        let mut payload = spec_jws_request();
++        payload["header"] = header;
++        let case = format!("sign-jws-invalidArgument-{name}-refused");
++        let (req, resp, audit) = f.send(&case, PRODUCER_SEED, &auth, JWS, payload).await;
++        assert_refused(&case, &req, &resp, &audit, "keys:invalidArgument");
++    }
++}
++
++/// "The signing input" item 2 and RFC 8785: a non-canonical
++/// `payloadBase64Url` and a number RFC 8785 cannot serialise exactly are
++/// `keys/sign-jws:payloadInvalid`.
++#[tokio::test]
++async fn sign_jws_payloads_that_cannot_be_signed_exactly_are_refused() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignJws])
++        .await;
++    for (name, payload) in [
++        (
++            "payloadBase64Url-noncanonical",
++            serde_json::json!({ "keyId": JWS_KEY, "payloadBase64Url": "QR" }),
++        ),
++        (
++            "payload-integer-beyond-2pow53",
++            serde_json::json!({ "keyId": JWS_KEY, "payload": { "n": 9_007_199_254_740_993u64 } }),
++        ),
++    ] {
++        let case = format!("sign-jws-payloadInvalid-{name}-refused");
++        let (req, resp, audit) = f.send(&case, PRODUCER_SEED, &auth, JWS, payload).await;
++        assert_refused(&case, &req, &resp, &audit, "keys/sign-jws:payloadInvalid");
++    }
++}
++
++/// Conformance items 3 and 4: an unknown key (to a super-admin, who may be
++/// told), a revoked key, and key types with no JOSE algorithm here.
++#[tokio::test]
++async fn sign_jws_key_refusals_carry_the_declared_codes() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignJws])
++        .await;
++    for (key, want_type) in [("agreement-x25519", "x25519"), ("pq-mldsa44", "mldsa44")] {
++        let mut payload = spec_jws_request();
++        payload["keyId"] = key.into();
++        let case = format!("sign-jws-keyTypeUnsupported-{want_type}-refused");
++        let (req, resp, audit) = f.send(&case, PRODUCER_SEED, &auth, JWS, payload).await;
++        assert_refused(
++            &case,
++            &req,
++            &resp,
++            &audit,
++            "keys/sign-jws:keyTypeUnsupported",
++        );
++        assert!(
++            resp["payload"]["details"]["keyType"]
++                .as_str()
++                .is_some_and(|t| t.eq_ignore_ascii_case(want_type)
++                    || t.replace('-', "").eq_ignore_ascii_case(want_type)),
++            "{resp:#}"
++        );
++    }
++
++    let mut revoked = f.record(JWS_KEY).await;
++    revoked.status = KeyStatus::Revoked;
++    f.state
++        .keys_ks
++        .insert(crate::keys::store_key(JWS_KEY), &revoked)
++        .await
++        .unwrap();
++    let (req, resp, audit) = f
++        .send(
++            "sign-jws-failedPrecondition-revoked-refused",
++            PRODUCER_SEED,
++            &auth,
++            JWS,
++            spec_jws_request(),
++        )
++        .await;
++    assert_refused(
++        "revoked",
++        &req,
++        &resp,
++        &audit,
++        "keys/sign-jws:failedPrecondition",
++    );
++
++    let admin_seed = crate::test_support::TEST_ADMIN_SEED[0];
++    let admin = crate::test_support::super_admin_claims();
++    let mut payload = spec_jws_request();
++    payload["keyId"] = "no-such-key".into();
++    let (req, resp, audit) = f
++        .send(
++            "sign-jws-notFound-refused",
++            admin_seed,
++            &admin,
++            JWS,
++            payload,
++        )
++        .await;
++    assert_refused("notFound", &req, &resp, &audit, "keys:notFound");
++}
++
++/// Conformance item 2 and Authorization: `sign` alone does not authorize this
++/// task (this VTA frames `keys/sign`), neither does `sign-csr`, and a role
++/// below application is refused — all `permissionDenied`, nothing signed.
++#[tokio::test]
++async fn sign_jws_without_entitlement_is_permission_denied() {
++    let f = Fixture::new().await;
++    for (seed, role, caps, name) in [
++        (0x72, Role::Application, vec![Capability::Sign], "sign-only"),
++        (
++            0x73,
++            Role::Application,
++            vec![Capability::SignCsr],
++            "sign-csr-only",
++        ),
++        (0x74, Role::Reader, vec![Capability::SignJws], "reader-role"),
++    ] {
++        let auth = f.producer(seed, role, caps).await;
++        let case = format!("C09-sign-jws-permissionDenied-{name}-refused");
++        let (req, resp, audit) = f.send(&case, seed, &auth, JWS, spec_jws_request()).await;
++        assert_refused(&case, &req, &resp, &audit, "permissionDenied");
++    }
++}
++
++/// C04: the specification's key-to-protocol binding (SHOULD) and `typ`
++/// restriction (MAY) are not enforced by this custodian. Recorded here as
++/// observed behaviour, not as a requirement: one key signs two `typ` values,
++/// and the same key also signs a certificate request.
++#[tokio::test]
++async fn sign_jws_purpose_restrictions_are_not_enforced_here() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(
++            PRODUCER_SEED,
++            Role::Application,
++            vec![Capability::SignJws, Capability::SignCsr],
++        )
++        .await;
++    for typ in ["oauth-authz-req+jwt", "openid4vci-proof+jwt"] {
++        let mut payload = spec_jws_request();
++        payload["header"]["typ"] = typ.into();
++        let case = format!("C04-sign-jws-typ-{}-accepted", typ.replace('+', "_"));
++        let (_, resp, _) = f.send(&case, PRODUCER_SEED, &auth, JWS, payload).await;
++        assert_eq!(resp["type"], format!("{JWS}#response"), "{resp:#}");
++    }
++    let mut csr = spec_csr_request();
++    csr["keyId"] = JWS_KEY.into();
++    let (_, resp, _) = f
++        .send(
++            "C04-sign-csr-same-key-accepted",
++            PRODUCER_SEED,
++            &auth,
++            CSR,
++            csr,
++        )
++        .await;
++    assert_eq!(resp["type"], format!("{CSR}#response"), "{resp:#}");
++}
++
++/// C08: a `keys/sign` signature over a JWS signing input — obtained by a
++/// caller that holds `sign` — does not verify as that JWS, because this VTA
++/// signs `keys/sign` payloads framed as `vti.vta.opaque-signing.v1 || 0x00 ||
++/// payload`. The same signature verifies over the framed bytes.
++#[tokio::test]
++async fn a_keys_sign_signature_does_not_verify_as_a_jws() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(0x75, Role::Application, vec![Capability::Sign])
++        .await;
++    let input = SPEC_JWS.rsplit_once('.').unwrap().0;
++    let (_, resp, _) = f
++        .send(
++            "C08-keys-sign-over-jws-signing-input",
++            0x75,
++            &auth,
++            SIGN,
++            serde_json::json!({
++                "keyId": JWS_KEY,
++                "payload": URL_SAFE_NO_PAD.encode(input.as_bytes()),
++                "algorithm": "ES256"
++            }),
++        )
++        .await;
++    assert_eq!(resp["type"], format!("{SIGN}#response"), "{resp:#}");
++    let sig = resp["payload"]["signature"].as_str().expect("{resp:#}");
++    let key = f.public(JWS_KEY).await;
++    assert!(
++        key.verify_compact(&format!("{input}.{sig}")).is_err(),
++        "a keys/sign signature must not verify as a JWS"
++    );
++    let raw = URL_SAFE_NO_PAD.decode(sig).unwrap();
++    key.verify_signature(
++        &vta_sdk::protocols::key_management::sign::opaque_signing_input(input.as_bytes()),
++        &raw,
++    )
++    .expect("it verifies over the framed bytes");
++}
++
++// ── keys/sign-csr/0.1 ────────────────────────────────────────────────────
++
++/// The `CertificationRequestInfo` the VTA builds from the specification's
++/// request and the specification's key is byte-for-byte the one in the
++/// specification's example CSR, whose signature verifies over it.
++#[test]
++fn sign_csr_spec_example_info_is_reproduced() {
++    use crate::operations::sign_formats::{CsrKey, certification_request_info};
++    use vta_sdk::protocols::key_management::sign_csr::SignCsrPayload;
++    let req: SignCsrPayload = serde_json::from_value(spec_csr_request()).unwrap();
++    let key = JwsKey::from_did_key(SPEC_CSR_KEY).unwrap();
++    let built = certification_request_info(
++        &req.subject,
++        req.subject_alt_names.as_ref(),
++        &CsrKey::from_jws_key(&key).unwrap(),
++    );
++    let der = pem_der(SPEC_CSR);
++    assert_eq!(built.as_slice(), first_inner_element(&der));
++
++    // The spec signature (DER Ecdsa-Sig-Value at the end) verifies over it.
++    let sig_der = {
++        let tail = &der[der.len() - 0x49..];
++        assert_eq!(tail[0], 0x03, "BIT STRING");
++        &tail[3..]
++    };
++    let sig = p256::ecdsa::Signature::from_der(sig_der).expect("DER signature");
++    key.verify_signature(&built, &sig.to_bytes())
++        .expect("the spec's CSR signature verifies over the rebuilt info");
++}
++
++/// C05 / Conformance items 6 and 7: the specification's request comes back as
++/// the `#response` variant with a PEM CSR in 64-character LF lines, the key's
++/// own `publicKey`, the specification's subject and alternative names, the
++/// key's own SPKI, a signature that verifies, and exactly the info the
++/// specification fixes; one `keys.sign-csr` audit row with subject, names and
++/// the digest of the signed DER.
++#[tokio::test]
++async fn sign_csr_spec_request_is_answered_with_a_verifiable_request() {
++    use crate::operations::sign_formats::{CsrKey, certification_request_info};
++    use vta_sdk::protocols::key_management::sign_csr::SignCsrPayload;
++    use x509_parser::prelude::*;
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignCsr])
++        .await;
++    let (req, resp, audit) = f
++        .send(
++            "C05-sign-csr-accepted",
++            PRODUCER_SEED,
++            &auth,
++            CSR,
++            spec_csr_request(),
++        )
++        .await;
++    assert_eq!(resp["type"], format!("{CSR}#response"), "{resp:#}");
++    assert_eq!(resp["threadId"], req["id"]);
++    let p = &resp["payload"];
++    trust_tasks_rs::specs::keys::sign_csr::v0_1::Response::validate_value(p)
++        .expect("the response validates against its schema");
++    let record = f.record(CSR_KEY).await;
++    assert_eq!(p["publicKey"], record.public_key);
++    let pem = p["csr"].as_str().unwrap();
++    assert!(pem.starts_with("-----BEGIN CERTIFICATE REQUEST-----\n"));
++    assert!(pem.ends_with("-----END CERTIFICATE REQUEST-----\n"));
++    assert!(!pem.contains('\r') && pem.lines().all(|l| l.len() <= 64));
++
++    let der = pem_der(pem);
++    let (rest, csr) = X509CertificationRequest::from_der(&der).unwrap();
++    assert!(rest.is_empty());
++    csr.verify_signature()
++        .expect("the request's signature verifies");
++    let parsed: SignCsrPayload = serde_json::from_value(spec_csr_request()).unwrap();
++    let own = CsrKey::from_jws_key(&f.public(CSR_KEY).await).unwrap();
++    let expected =
++        certification_request_info(&parsed.subject, parsed.subject_alt_names.as_ref(), &own);
++    assert_eq!(first_inner_element(&der), expected.as_slice());
++    let exts: Vec<_> = csr.requested_extensions().unwrap().collect();
++    assert_eq!(exts.len(), 1, "subjectAltName alone");
++
++    assert_eq!(audit.len(), 1, "{audit:?}");
++    assert_eq!(audit[0].action, "keys.sign-csr");
++    assert_eq!(
++        audit[0].detail.as_deref(),
++        Some(
++            format!(
++                "subject=C=DE,O=Example Community e.V.,organizationIdentifier=LEIXG-5299000EXAMPLE000001,CN=Example Community Verifier san=dns:verifier.community.example,uri:https://verifier.community.example sha256={}",
++                hex::encode(Sha256::digest(&expected))
++            )
++            .as_str()
++        )
++    );
++}
++
++/// Conformance item 5: subject attributes that break the table are refused
++/// with `keys/sign-csr:subjectInvalid`, naming the member and the index, and
++/// are never repaired.
++#[tokio::test]
++async fn sign_csr_subject_rules_are_refused_on_the_wire() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignCsr])
++        .await;
++    for (name, bad) in [
++        (
++            "C-lowercase",
++            serde_json::json!({ "type": "C", "value": "de" }),
++        ),
++        (
++            "C-three-letters",
++            serde_json::json!({ "type": "C", "value": "DEU" }),
++        ),
++        (
++            "CN-65-chars",
++            serde_json::json!({ "type": "CN", "value": "x".repeat(65) }),
++        ),
++        (
++            "O-control-char",
++            serde_json::json!({ "type": "O", "value": "Acme\u{7}" }),
++        ),
++        (
++            "serialNumber-underscore",
++            serde_json::json!({ "type": "serialNumber", "value": "a_b" }),
++        ),
++        (
++            "emailAddress-no-at",
++            serde_json::json!({ "type": "emailAddress", "value": "no-at-sign" }),
++        ),
++        (
++            "CN-C1-control-char",
++            serde_json::json!({ "type": "CN", "value": "ok\u{85}" }),
++        ),
++    ] {
++        let payload = serde_json::json!({
++            "keyId": CSR_KEY,
++            "subject": [{ "type": "C", "value": "DE" }, bad],
++        });
++        let case = format!("sign-csr-subjectInvalid-{name}-refused");
++        let (req, resp, audit) = f.send(&case, PRODUCER_SEED, &auth, CSR, payload).await;
++        assert_refused(&case, &req, &resp, &audit, "keys/sign-csr:subjectInvalid");
++        assert_eq!(resp["payload"]["details"]["member"], "subject", "{resp:#}");
++        assert_eq!(resp["payload"]["details"]["index"], 1, "{resp:#}");
++    }
++}
++
++/// C06: the custodian checks the subject's form, not the requester's
++/// authority over the name — a well-formed subject naming another
++/// organisation is signed. Observed behaviour; the specification leaves the
++/// name to the CA (a custodian MAY restrict it).
++#[tokio::test]
++async fn sign_csr_does_not_judge_whose_name_the_subject_is() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignCsr])
++        .await;
++    let (_, resp, audit) = f
++        .send(
++            "C06-sign-csr-other-organisation-accepted",
++            PRODUCER_SEED,
++            &auth,
++            CSR,
++            serde_json::json!({
++                "keyId": CSR_KEY,
++                "subject": [
++                    { "type": "C", "value": "FR" },
++                    { "type": "O", "value": "Some Other Organisation SA" },
++                    { "type": "CN", "value": "Not The Requester" }
++                ]
++            }),
++        )
++        .await;
++    assert_eq!(resp["type"], format!("{CSR}#response"), "{resp:#}");
++    assert_eq!(audit.len(), 1);
++}
++
++/// Conformance items 3 and 4 for `keys/sign-csr`: an unknown key, a revoked
++/// key, and key types other than `p256` / `ed25519`.
++#[tokio::test]
++async fn sign_csr_key_refusals_carry_the_declared_codes() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(PRODUCER_SEED, Role::Application, vec![Capability::SignCsr])
++        .await;
++    for (key, name) in [("agreement-x25519", "x25519"), ("pq-mldsa44", "mldsa44")] {
++        let mut payload = spec_csr_request();
++        payload["keyId"] = key.into();
++        let case = format!("sign-csr-keyTypeUnsupported-{name}-refused");
++        let (req, resp, audit) = f.send(&case, PRODUCER_SEED, &auth, CSR, payload).await;
++        assert_refused(
++            &case,
++            &req,
++            &resp,
++            &audit,
++            "keys/sign-csr:keyTypeUnsupported",
++        );
++        assert!(
++            resp["payload"]["details"]["keyType"].is_string(),
++            "{resp:#}"
++        );
++    }
++
++    let mut ed = spec_csr_request();
++    ed["keyId"] = "verifier-ed25519".into();
++    let (_, resp, _) = f
++        .send("sign-csr-ed25519-accepted", PRODUCER_SEED, &auth, CSR, ed)
++        .await;
++    assert_eq!(resp["type"], format!("{CSR}#response"), "{resp:#}");
++
++    let mut revoked = f.record(CSR_KEY).await;
++    revoked.status = KeyStatus::Revoked;
++    f.state
++        .keys_ks
++        .insert(crate::keys::store_key(CSR_KEY), &revoked)
++        .await
++        .unwrap();
++    let (req, resp, audit) = f
++        .send(
++            "sign-csr-failedPrecondition-revoked-refused",
++            PRODUCER_SEED,
++            &auth,
++            CSR,
++            spec_csr_request(),
++        )
++        .await;
++    assert_refused(
++        "revoked",
++        &req,
++        &resp,
++        &audit,
++        "keys/sign-csr:failedPrecondition",
++    );
++
++    let admin_seed = crate::test_support::TEST_ADMIN_SEED[0];
++    let admin = crate::test_support::super_admin_claims();
++    let mut payload = spec_csr_request();
++    payload["keyId"] = "no-such-key".into();
++    let (req, resp, audit) = f
++        .send(
++            "sign-csr-notFound-refused",
++            admin_seed,
++            &admin,
++            CSR,
++            payload,
++        )
++        .await;
++    assert_refused("notFound", &req, &resp, &audit, "keys:notFound");
++}
++
++/// Conformance items 2 and 3, as this VTA orders them: to a producer that is
++/// not a super-admin, a key id with no record and a key in a context the
++/// producer cannot act in get the same `permissionDenied` — the VTA does not
++/// say which key ids exist outside the caller's reach. Only a super-admin is
++/// told `keys:notFound` (asserted above).
++#[tokio::test]
++async fn an_unknown_or_out_of_scope_key_is_permission_denied_to_a_producer() {
++    let f = Fixture::new().await;
++    crate::contexts::create_context(&f.state.contexts_ks, "elsewhere", "elsewhere")
++        .await
++        .expect("create context");
++    operations::keys::create_key(
++        &f.state.keys_ks,
++        &f.state.internal_ks,
++        &f.state.contexts_ks,
++        &f.state.seed_store,
++        &f.state.audit_sink,
++        &f.state.acl_ks,
++        &crate::test_support::super_admin_claims(),
++        operations::keys::CreateKeyParams {
++            internal: false,
++            key_type: KeyType::P256,
++            derivation_path: None,
++            key_id: Some("elsewhere-p256".to_string()),
++            mnemonic: None,
++            label: None,
++            context_id: Some("elsewhere".to_string()),
++        },
++        "test",
++    )
++    .await
++    .expect("mint");
++    let auth = f
++        .producer(
++            PRODUCER_SEED,
++            Role::Application,
++            vec![Capability::SignJws, Capability::SignCsr],
++        )
++        .await;
++    for (task, short, base) in [
++        (JWS, "sign-jws", spec_jws_request()),
++        (CSR, "sign-csr", spec_csr_request()),
++    ] {
++        for key in ["no-such-key", "elsewhere-p256"] {
++            let mut payload = base.clone();
++            payload["keyId"] = key.into();
++            let case = format!("C09-{short}-{key}-as-producer-refused");
++            let (req, resp, audit) = f.send(&case, PRODUCER_SEED, &auth, task, payload).await;
++            assert_refused(&case, &req, &resp, &audit, "permissionDenied");
++        }
++    }
++}
++
++/// Authorization: `sign` alone, `sign-jws` alone, and a reader are refused.
++#[tokio::test]
++async fn sign_csr_without_entitlement_is_permission_denied() {
++    let f = Fixture::new().await;
++    for (seed, role, caps, name) in [
++        (0x72, Role::Application, vec![Capability::Sign], "sign-only"),
++        (
++            0x73,
++            Role::Application,
++            vec![Capability::SignJws],
++            "sign-jws-only",
++        ),
++        (0x74, Role::Reader, vec![Capability::SignCsr], "reader-role"),
++    ] {
++        let auth = f.producer(seed, role, caps).await;
++        let case = format!("C09-sign-csr-permissionDenied-{name}-refused");
++        let (req, resp, audit) = f.send(&case, seed, &auth, CSR, spec_csr_request()).await;
++        assert_refused(&case, &req, &resp, &audit, "permissionDenied");
++    }
++}
++
++// ── the specifications' invalid examples, at the VTA ─────────────────────
++
++/// C07 and every other schema-level rejection: each request in the
++/// specifications' `payload.invalid-examples.json`, sent by an entitled
++/// producer naming a key that exists, is refused by the VTA's §7.2 pipeline
++/// with a `trust-task-error` and nothing signed; each response example is
++/// rejected by the response schema the VTA answers against.
++#[tokio::test]
++async fn the_specifications_invalid_examples_are_refused_by_the_vta() {
++    let f = Fixture::new().await;
++    let auth = f
++        .producer(
++            PRODUCER_SEED,
++            Role::Application,
++            vec![Capability::SignJws, Capability::SignCsr],
++        )
++        .await;
++    let mut summary = Vec::new();
++    for (task, file, short) in [
++        (
++            JWS,
++            include_str!("sign_protocol_fixtures/sign-jws-0.1.payload.invalid-examples.json"),
++            "sign-jws",
++        ),
++        (
++            CSR,
++            include_str!("sign_protocol_fixtures/sign-csr-0.1.payload.invalid-examples.json"),
++            "sign-csr",
++        ),
++    ] {
++        let examples: Vec<Value> = serde_json::from_str(file).unwrap();
++        for (i, ex) in examples.iter().enumerate() {
++            let note = ex["note"].as_str().unwrap_or_default();
++            if ex["variant"] == "response" {
++                let rejected = match short {
++                    "sign-jws" => {
++                        trust_tasks_rs::specs::keys::sign_jws::v0_1::Response::validate_value(
++                            &ex["payload"],
++                        )
++                        .is_err()
++                    }
++                    _ => trust_tasks_rs::specs::keys::sign_csr::v0_1::Response::validate_value(
++                        &ex["payload"],
++                    )
++                    .is_err(),
++                };
++                summary.push(serde_json::json!({
++                    "task": short, "index": i, "variant": "response", "note": note,
++                    "rejected": rejected,
++                }));
++                assert!(rejected, "{short} response example {i} accepted: {note}");
++                continue;
++            }
++            let case = format!("C07-{short}-invalid-example-{i:02}-refused");
++            let (req, resp, audit) = f
++                .send(&case, PRODUCER_SEED, &auth, task, ex["payload"].clone())
++                .await;
++            summary.push(serde_json::json!({
++                "task": short, "index": i, "variant": "request", "note": note,
++                "responseType": resp["type"], "code": code(&resp),
++                "signed": !audit.is_empty(),
++            }));
++            assert!(is_error(&resp), "{case} accepted: {note}\n{resp:#}");
++            assert!(audit.is_empty(), "{case}: signed");
++            assert!(
++                resp.pointer("/payload/jws").is_none() && resp.pointer("/payload/csr").is_none()
++            );
++            let _ = req;
++        }
++    }
++    evidence(
++        "C07-invalid-examples-summary",
++        &Value::Null,
++        &Value::Array(summary),
++        &[],
++    );
++}
+diff --git a/vta-service/src/trust_tasks/sign_protocol_fixtures/sign-csr-0.1.payload.invalid-examples.json b/vta-service/src/trust_tasks/sign_protocol_fixtures/sign-csr-0.1.payload.invalid-examples.json
+new file mode 100644
+index 00000000..a47c730d
+--- /dev/null
++++ b/vta-service/src/trust_tasks/sign_protocol_fixtures/sign-csr-0.1.payload.invalid-examples.json
+@@ -0,0 +1,133 @@
++[
++  {
++    "note": "Missing required `subject` — a certificate request names who is to be certified, and a custodian that defaulted one would be choosing the name on the producer's behalf.",
++    "payload": {
++      "keyId": "eudi-access-p256"
++    }
++  },
++  {
++    "note": "Empty `subject` — an empty distinguished name would make the subject alternative name the only identity, which RFC 5280 handles with a critical extension this task never requests.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": []
++    }
++  },
++  {
++    "note": "`subject` as a DN string — the custodian never parses a distinguished name; the structured attribute list is what lets it encode exactly what was asked.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": "CN=Example Community Verifier,O=Example Community e.V.,C=DE"
++    }
++  },
++  {
++    "note": "An attribute type outside the closed set (passing an OID through) — each type's encoding is fixed by the specification, so an unknown one cannot be encoded on trust.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "2.5.4.12", "value": "Verifier" }]
++    }
++  },
++  {
++    "note": "A lower-cased attribute short name — these are externally owned names carried verbatim (`CN`, not `cn`).",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "cn", "value": "Example Community Verifier" }]
++    }
++  },
++  {
++    "note": "An attribute with an empty value — X.520 attribute values are never empty.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "" }]
++    }
++  },
++  {
++    "note": "A multi-valued RDN smuggled as an extra member — each element is one single-valued RDN.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "Example Community Verifier", "also": { "type": "O", "value": "Example Community e.V." } }]
++    }
++  },
++  {
++    "note": "A raw DER CertificationRequestInfo to sign — the generic oracle's shape. additionalProperties: false is what keeps the custodian building the request itself.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "Example Community Verifier" }],
++      "certificationRequestInfo": "MIIBNgIBADB4MQswCQYDVQQGEwJERQ"
++    }
++  },
++  {
++    "note": "A requested extension — extensions come from the CA, and only the subject alternative name is ever requested.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "Example Community Verifier" }],
++      "extensions": [{ "oid": "2.5.29.19", "critical": true, "value": "MAMBAf8" }]
++    }
++  },
++  {
++    "note": "A wildcard dNSName — this task requests exact host names only.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "Example Community Verifier" }],
++      "subjectAltNames": { "dns": ["*.community.example"] }
++    }
++  },
++  {
++    "note": "An unknown subjectAltNames kind (`ip`) — the set of kinds is closed.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "Example Community Verifier" }],
++      "subjectAltNames": { "ip": ["192.0.2.1"] }
++    }
++  },
++  {
++    "note": "An empty `subjectAltNames` object — present means at least one name; absent means none.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "Example Community Verifier" }],
++      "subjectAltNames": {}
++    }
++  },
++  {
++    "note": "A URI with a space — uniformResourceIdentifier entries are printable ASCII without spaces.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "Example Community Verifier" }],
++      "subjectAltNames": { "uri": ["https://verifier.community.example/a path"] }
++    }
++  },
++  {
++    "note": "Bare/unnamespaced ext key — SPEC §4.5.1 producer rule.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "subject": [{ "type": "CN", "value": "Example Community Verifier" }],
++      "ext": { "no-dots": {} }
++    }
++  },
++  {
++    "variant": "response",
++    "note": "Response without `publicKey` — the producer confirms the request is for the key it meant from this member.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "csr": "-----BEGIN CERTIFICATE REQUEST-----\nMIIBjzCCATYCAQAw\n-----END CERTIFICATE REQUEST-----\n"
++    }
++  },
++  {
++    "variant": "response",
++    "note": "A bare base64 DER rather than PEM `CERTIFICATE REQUEST` armour.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "csr": "MIIBjzCCATYCAQAweDELMAkGA1UEBhMCREUx",
++      "publicKey": "zDnaezKfW1F36Bc3ranfFMiPJXexoqUeHSYLeQwGns4npGdh3"
++    }
++  },
++  {
++    "variant": "response",
++    "note": "Response smuggling key material beside the request — additionalProperties: false on the response is what makes 'never the private key' checkable.",
++    "payload": {
++      "keyId": "eudi-access-p256",
++      "csr": "-----BEGIN CERTIFICATE REQUEST-----\nMIIBjzCCATYCAQAw\n-----END CERTIFICATE REQUEST-----\n",
++      "publicKey": "zDnaezKfW1F36Bc3ranfFMiPJXexoqUeHSYLeQwGns4npGdh3",
++      "privateKey": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc"
++    }
++  }
++]
+diff --git a/vta-service/src/trust_tasks/sign_protocol_fixtures/sign-jws-0.1.payload.invalid-examples.json b/vta-service/src/trust_tasks/sign_protocol_fixtures/sign-jws-0.1.payload.invalid-examples.json
+new file mode 100644
+index 00000000..8b75fcdc
+--- /dev/null
++++ b/vta-service/src/trust_tasks/sign_protocol_fixtures/sign-jws-0.1.payload.invalid-examples.json
+@@ -0,0 +1,104 @@
++[
++  {
++    "note": "Neither `payload` nor `payloadBase64Url` — a JWS with no payload is not what this task signs, and a custodian that defaulted one would be choosing what the key vouches for.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "header": { "typ": "oauth-authz-req+jwt" }
++    }
++  },
++  {
++    "note": "Both `payload` and `payloadBase64Url` — exactly one is allowed, so the custodian never has to pick which of two payloads the producer meant to sign.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "payload": { "nonce": "q8vTt3yN5mQ0aW2f" },
++      "payloadBase64Url": "eyJub25jZSI6InE4dlR0M3lONW1RMGFXMmYifQ"
++    }
++  },
++  {
++    "note": "Missing `keyId` — the custodian chooses `alg` from the key, so without one there is nothing to sign with and no algorithm to set.",
++    "payload": {
++      "payload": { "nonce": "q8vTt3yN5mQ0aW2f" }
++    }
++  },
++  {
++    "note": "A top-level `algorithm` member — the producer cannot name the algorithm (keys/sign's shape). `additionalProperties: false` keeps it out; an `alg` inside `header` is refused by the custodian as headerMemberForbidden.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "algorithm": "ES256",
++      "payload": { "nonce": "q8vTt3yN5mQ0aW2f" }
++    }
++  },
++  {
++    "note": "A `signingInput` member carrying raw bytes to sign — the generic oracle's shape. The custodian builds the signing input itself; additionalProperties: false is what keeps this task from becoming keys/sign under another name.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "signingInput": "ZXlKaGJHY2lPaUpGVXpJMU5pSjkuZXlKdWIyNWpaU0k2SW5FNGRsUjBNM2xPTlcxUk1HRlhNbVlpZlE"
++    }
++  },
++  {
++    "note": "`payload` as a string rather than a JSON object — a non-JSON payload goes in `payloadBase64Url`, so the custodian never guesses whether a string is JSON text or bytes.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "payload": "{\"nonce\":\"q8vTt3yN5mQ0aW2f\"}"
++    }
++  },
++  {
++    "note": "`payloadBase64Url` in standard base64 with padding — the pattern refuses `+`, `/` and `=`.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "payloadBase64Url": "aGVsbG8+d29ybGQ/IQ=="
++    }
++  },
++  {
++    "note": "`header` as an array rather than an object — a JOSE header is a JSON object.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "header": [{ "typ": "oauth-authz-req+jwt" }],
++      "payload": { "nonce": "q8vTt3yN5mQ0aW2f" }
++    }
++  },
++  {
++    "note": "Bare/unnamespaced ext key — SPEC §4.5.1 producer rule.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "payload": { "nonce": "q8vTt3yN5mQ0aW2f" },
++      "ext": { "no-dots": {} }
++    }
++  },
++  {
++    "variant": "response",
++    "note": "Response without `jws` — the one member the task exists to return.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "alg": "ES256"
++    }
++  },
++  {
++    "variant": "response",
++    "note": "Response `alg` outside the closed set — `none` is never a value a custodian chooses.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "alg": "none",
++      "jws": "eyJhbGciOiJub25lIn0.eyJub25jZSI6InE4dlR0M3lONW1RMGFXMmYifQ.c2ln"
++    }
++  },
++  {
++    "variant": "response",
++    "note": "A JWS with an empty signature segment — an unsigned token is not a response to a signing request, and the pattern requires three non-empty segments.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "alg": "ES256",
++      "jws": "eyJhbGciOiJFUzI1NiJ9.eyJub25jZSI6InE4dlR0M3lONW1RMGFXMmYifQ."
++    }
++  },
++  {
++    "variant": "response",
++    "note": "Response smuggling key material beside the JWS — additionalProperties: false on the response is what makes 'never the private key' checkable.",
++    "payload": {
++      "keyId": "verifier-p256",
++      "alg": "ES256",
++      "jws": "eyJhbGciOiJFUzI1NiJ9.eyJub25jZSI6InE4dlR0M3lONW1RMGFXMmYifQ.c2ln",
++      "privateKey": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc"
++    }
++  }
++]

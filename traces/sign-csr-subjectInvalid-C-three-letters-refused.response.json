@@ -1,0 +1,30 @@
+{
+  "id": "urn:uuid:df527db5-6f0f-4ca6-bee5-50a6688c4cfc",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys/sign-csr:subjectInvalid",
+    "details": {
+      "index": 1,
+      "member": "subject",
+      "reason": "C must be 1 to 2 characters"
+    },
+    "inResponseTo": {
+      "id": "urn:uuid:3d3f91bb-a1c6-4645-9449-3114a21deae3",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+    },
+    "message": "C must be 1 to 2 characters",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z2k6ZsVo9evztSs2VLzbFZUKcnqvC8BUn1NQKvMDgPTavW8wTnLEEK4FoQgAamB3RERFpjTp3YDin8cyfwJkLhBcU",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:3d3f91bb-a1c6-4645-9449-3114a21deae3",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

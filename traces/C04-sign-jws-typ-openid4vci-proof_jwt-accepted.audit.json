@@ -1,0 +1,13 @@
+[
+  {
+    "action": "keys.sign-jws",
+    "actor": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+    "channel": "trust-task",
+    "contextId": "community",
+    "detail": "alg=ES256 typ=openid4vci-proof+jwt sha256=a906f89c3bbca4a4e04a919c41e2a78382f95a21dd364c33e82b5957a3c61008",
+    "id": "0db3725b-a67a-495e-bae2-8f14af53254b",
+    "outcome": "success",
+    "resource": "verifier-p256",
+    "timestamp": 1793285013
+  }
+]

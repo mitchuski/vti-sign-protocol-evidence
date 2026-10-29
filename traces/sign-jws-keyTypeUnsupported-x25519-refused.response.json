@@ -1,0 +1,28 @@
+{
+  "id": "urn:uuid:a9ce6179-1412-4bb8-94fc-f8471eded5fe",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys/sign-jws:keyTypeUnsupported",
+    "details": {
+      "keyType": "x25519"
+    },
+    "inResponseTo": {
+      "id": "urn:uuid:4a570a43-88e1-4a70-8236-e83ab7289498",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+    },
+    "message": "a x25519 key signs nothing this task produces",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z3bU3QPFd9pYpsLNLGdkge8HW5evDRCvxNHNHqCD7Uuw1dgYUAebjaCTxSRSQCfpqobjVzkVidLCqzd8x4nNm6XLN",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:4a570a43-88e1-4a70-8236-e83ab7289498",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

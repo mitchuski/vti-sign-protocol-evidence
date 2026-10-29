@@ -1,0 +1,22 @@
+{
+  "id": "urn:uuid:08515dfe-a1cf-4c97-95d0-932290ebef93",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "payload": {
+    "header": {
+      "typ": "example+jwt"
+    },
+    "keyId": "verifier-ed25519",
+    "payloadBase64Url": "aGVsbG8"
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z3tqXtZbmvD9auczSZ7WWno97LQ4bcwVhjKg3ahggA7m4vpXgZ6tVp5cU6x5N3tKwRVUPX4JPtY92acgNL4c4RX4G",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL#z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL"
+  },
+  "recipient": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "type": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+}

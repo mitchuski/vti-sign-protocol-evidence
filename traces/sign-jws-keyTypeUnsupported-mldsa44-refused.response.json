@@ -1,0 +1,28 @@
+{
+  "id": "urn:uuid:9d8b3ccb-3c61-48e0-b35f-e3bf9ee90470",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys/sign-jws:keyTypeUnsupported",
+    "details": {
+      "keyType": "mldsa44"
+    },
+    "inResponseTo": {
+      "id": "urn:uuid:37c0c902-7e79-49b5-858e-1132fcdde1a5",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+    },
+    "message": "a mldsa44 key signs nothing this task produces",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "zeFt8gnPKhjtMvNxFazzCkzdNt27S6EQYeUx59DLQ2mQzCS4UecVGXTu5gG6npuHi5WBPPDL5Tjex7AEuvkjRZ5f",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:37c0c902-7e79-49b5-858e-1132fcdde1a5",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

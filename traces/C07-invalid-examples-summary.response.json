@@ -1,0 +1,258 @@
+[
+  {
+    "code": "malformedRequest",
+    "index": 0,
+    "note": "Neither `payload` nor `payloadBase64Url` — a JWS with no payload is not what this task signs, and a custodian that defaulted one would be choosing what the key vouches for.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 1,
+    "note": "Both `payload` and `payloadBase64Url` — exactly one is allowed, so the custodian never has to pick which of two payloads the producer meant to sign.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 2,
+    "note": "Missing `keyId` — the custodian chooses `alg` from the key, so without one there is nothing to sign with and no algorithm to set.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 3,
+    "note": "A top-level `algorithm` member — the producer cannot name the algorithm (keys/sign's shape). `additionalProperties: false` keeps it out; an `alg` inside `header` is refused by the custodian as headerMemberForbidden.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 4,
+    "note": "A `signingInput` member carrying raw bytes to sign — the generic oracle's shape. The custodian builds the signing input itself; additionalProperties: false is what keeps this task from becoming keys/sign under another name.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 5,
+    "note": "`payload` as a string rather than a JSON object — a non-JSON payload goes in `payloadBase64Url`, so the custodian never guesses whether a string is JSON text or bytes.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 6,
+    "note": "`payloadBase64Url` in standard base64 with padding — the pattern refuses `+`, `/` and `=`.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 7,
+    "note": "`header` as an array rather than an object — a JOSE header is a JSON object.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 8,
+    "note": "Bare/unnamespaced ext key — SPEC §4.5.1 producer rule.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-jws",
+    "variant": "request"
+  },
+  {
+    "index": 9,
+    "note": "Response without `jws` — the one member the task exists to return.",
+    "rejected": true,
+    "task": "sign-jws",
+    "variant": "response"
+  },
+  {
+    "index": 10,
+    "note": "Response `alg` outside the closed set — `none` is never a value a custodian chooses.",
+    "rejected": true,
+    "task": "sign-jws",
+    "variant": "response"
+  },
+  {
+    "index": 11,
+    "note": "A JWS with an empty signature segment — an unsigned token is not a response to a signing request, and the pattern requires three non-empty segments.",
+    "rejected": true,
+    "task": "sign-jws",
+    "variant": "response"
+  },
+  {
+    "index": 12,
+    "note": "Response smuggling key material beside the JWS — additionalProperties: false on the response is what makes 'never the private key' checkable.",
+    "rejected": true,
+    "task": "sign-jws",
+    "variant": "response"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 0,
+    "note": "Missing required `subject` — a certificate request names who is to be certified, and a custodian that defaulted one would be choosing the name on the producer's behalf.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 1,
+    "note": "Empty `subject` — an empty distinguished name would make the subject alternative name the only identity, which RFC 5280 handles with a critical extension this task never requests.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 2,
+    "note": "`subject` as a DN string — the custodian never parses a distinguished name; the structured attribute list is what lets it encode exactly what was asked.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 3,
+    "note": "An attribute type outside the closed set (passing an OID through) — each type's encoding is fixed by the specification, so an unknown one cannot be encoded on trust.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 4,
+    "note": "A lower-cased attribute short name — these are externally owned names carried verbatim (`CN`, not `cn`).",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 5,
+    "note": "An attribute with an empty value — X.520 attribute values are never empty.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 6,
+    "note": "A multi-valued RDN smuggled as an extra member — each element is one single-valued RDN.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 7,
+    "note": "A raw DER CertificationRequestInfo to sign — the generic oracle's shape. additionalProperties: false is what keeps the custodian building the request itself.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 8,
+    "note": "A requested extension — extensions come from the CA, and only the subject alternative name is ever requested.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 9,
+    "note": "A wildcard dNSName — this task requests exact host names only.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 10,
+    "note": "An unknown subjectAltNames kind (`ip`) — the set of kinds is closed.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 11,
+    "note": "An empty `subjectAltNames` object — present means at least one name; absent means none.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 12,
+    "note": "A URI with a space — uniformResourceIdentifier entries are printable ASCII without spaces.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "code": "malformedRequest",
+    "index": 13,
+    "note": "Bare/unnamespaced ext key — SPEC §4.5.1 producer rule.",
+    "responseType": "https://trusttasks.org/spec/trust-task-error/0.6",
+    "signed": false,
+    "task": "sign-csr",
+    "variant": "request"
+  },
+  {
+    "index": 14,
+    "note": "Response without `publicKey` — the producer confirms the request is for the key it meant from this member.",
+    "rejected": true,
+    "task": "sign-csr",
+    "variant": "response"
+  },
+  {
+    "index": 15,
+    "note": "A bare base64 DER rather than PEM `CERTIFICATE REQUEST` armour.",
+    "rejected": true,
+    "task": "sign-csr",
+    "variant": "response"
+  },
+  {
+    "index": 16,
+    "note": "Response smuggling key material beside the request — additionalProperties: false on the response is what makes 'never the private key' checkable.",
+    "rejected": true,
+    "task": "sign-csr",
+    "variant": "response"
+  }
+]

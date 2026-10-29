@@ -1,0 +1,42 @@
+# repo: OpenVTC/verifiable-trust-infrastructure @ 61c23f2091aab03d07271c142eabc0ba74dfe889
+# toolchain: cargo 1.98.1 (797e8a9bc 2026-08-05); rustc 1.98.1 (48a229cea 2026-09-01)
+# cmd: cargo test -p vta-service --lib -- operations::sign_formats::tests operations::keys::tests::sign_jws operations::keys::tests::sign_csr operations::keys::tests::protocol_signing trust_tasks::conformance::every_published_dispatched_uri_has_a_witness trust_tasks::conformance::every_witnessed_task_round_trips_through_its_generated_types
+warning: unused import: `std::path::Path`
+  --> vti-common\src\backup_transfer\mod.rs:29:5
+   |
+29 | use std::path::Path;
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vti-common` (lib) generated 1 warning (run `cargo fix --lib -p vti-common` to apply 1 suggestion)
+warning: unused variable: `args`
+   --> vta-service\src\restore.rs:174:9
+    |
+174 |     let args: Vec<std::ffi::OsString> = std::env::args_os().skip(1).collect();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_args`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vta-service` (lib) generated 1 warning (run `cargo fix --lib -p vta-service` to apply 1 suggestion)
+warning: `vta-service` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.14s
+     Running unittests src\lib.rs (target\debug\deps\vta_service-3d709d59068d3174.exe)
+
+running 12 tests
+test operations::sign_formats::tests::a_payload_that_cannot_be_signed_exactly_is_refused ... ok
+test operations::sign_formats::tests::subject_rules_refuse_without_repairing ... ok
+test operations::sign_formats::tests::the_spec_example_signing_input_is_reproduced ... ok
+test operations::sign_formats::tests::forbidden_and_mistyped_header_members_are_refused ... ok
+test trust_tasks::conformance::every_published_dispatched_uri_has_a_witness ... ok
+test trust_tasks::conformance::every_witnessed_task_round_trips_through_its_generated_types ... ok
+test operations::keys::tests::sign_jws_declared_refusals ... ok
+test operations::keys::tests::sign_csr_builds_a_request_a_ca_accepts ... ok
+test operations::keys::tests::protocol_signing_audits_the_digest_not_the_payload ... ok
+test operations::keys::tests::sign_jws_signs_a_jws_that_verifies_under_the_key ... ok
+test operations::keys::tests::sign_csr_refuses_a_subject_it_would_have_to_repair ... ok
+test operations::keys::tests::protocol_signing_takes_its_own_capability_only ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 1776 filtered out; finished in 0.32s
+
+# exit=0

@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:69feedf8-c867-4c33-955f-7fb19cac971e",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys:invalidArgument",
+    "inResponseTo": {
+      "id": "urn:uuid:7981a785-ceb9-4397-a941-9ddffb97c478",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+    },
+    "message": "header `x5t` must be a base64url string",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z39r1rHE1yAzeXvTM1PrvjPYy4UjMUJJHDRuErdQBhhf6jwcGvVqBgZeEq5QZjpiRh79m7sWGuVR6eevNj5cnDrCJ",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:7981a785-ceb9-4397-a941-9ddffb97c478",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "urn:uuid:563e7255-428e-47be-9554-858074a55006",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "payload": {
+    "keyId": "eudi-access-p256",
+    "subject": [
+      {
+        "type": "cn",
+        "value": "Example Community Verifier"
+      }
+    ]
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z4avdRsKSKhrhyCiHNKxD2hAzoWxN94SPMtQGys5wFWUs9RmKsJ3NN7SSRjJs9DKDzvvW6kyzdr2uAN8iNDQcctUt",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL#z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL"
+  },
+  "recipient": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "type": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+}

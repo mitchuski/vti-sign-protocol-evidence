@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:45397435-0234-45d7-a371-bbc26b9ddbc5",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "malformedRequest",
+    "inResponseTo": {
+      "id": "urn:uuid:87ef4390-929f-4530-933f-3903ea7be5e4",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+    },
+    "message": "malformed request: payload does not conform to https://trusttasks.org/spec/keys/sign-jws/0.1: payload failed schema validation: \"{\\\"nonce\\\":\\\"q8vTt3yN5mQ0aW2f\\\"}\" is not of type \"object\"",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z3BwZaaKuPXouHjBj7brG4En5YEE7HoUFvAf1jPAFe4pY5iJMNZMrfGGEchgJYd3hwDYAVvBRLVifyu5MEvMqL5QJ",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:87ef4390-929f-4530-933f-3903ea7be5e4",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

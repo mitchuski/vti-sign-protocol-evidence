@@ -1,0 +1,20 @@
+{
+  "id": "urn:uuid:b7ac26c4-a4a0-4cc1-b55c-2518fa7c06d5",
+  "issuedAt": "2026-10-29T14:43:31Z",
+  "issuer": "did:key:z6MkhTPbkJ6JwtVgYLTq6hESXvXuSUKymUrEqmmVQjUC7aUQ",
+  "payload": {
+    "algorithm": "ES256",
+    "keyId": "verifier-p256",
+    "payload": "ZXlKaGJHY2lPaUpGVXpJMU5pSXNJbXRwWkNJNkltUnBaRHBsZUdGdGNHeGxPbU52YlcxMWJtbDBlUzEyWlhKcFptbGxjaU5yWlhrdE1TSXNJblI1Y0NJNkltOWhkWFJvTFdGMWRHaDZMWEpsY1N0cWQzUWlmUS5leUpoZFdRaU9pSm9kSFJ3Y3pvdkwzTmxiR1l0YVhOemRXVmtMbTFsTDNZeUlpd2lZMnhwWlc1MFgybGtJam9pWkdWalpXNTBjbUZzYVhwbFpGOXBaR1Z1ZEdsbWFXVnlPbVJwWkRwbGVHRnRjR3hsT21OdmJXMTFibWwwZVMxMlpYSnBabWxsY2lJc0ltUmpjV3hmY1hWbGNua2lPbnNpWTNKbFpHVnVkR2xoYkhNaU9sdDdJbVp2Y20xaGRDSTZJbVJqSzNOa0xXcDNkQ0lzSW1sa0lqb2liV1Z0WW1WeWMyaHBjQ0lzSW0xbGRHRWlPbnNpZG1OMFgzWmhiSFZsY3lJNld5Sm9kSFJ3Y3pvdkwyTnlaV1JsYm5ScFlXeHpMbVY0WVcxd2JHVXZiV1Z0WW1WeWMyaHBjQ0pkZlgxZGZTd2laWGh3SWpveE56a3hOekE1TlRBd0xDSnBZWFFpT2pFM09URTNNRGt5TURBc0ltNXZibU5sSWpvaWNUaDJWSFF6ZVU0MWJWRXdZVmN5WmlJc0luSmxjM0J2Ym5ObFgyMXZaR1VpT2lKa2FYSmxZM1JmY0c5emRDNXFkM1FpTENKeVpYTndiMjV6WlY5MGVYQmxJam9pZG5CZmRHOXJaVzRpTENKeVpYTndiMjV6WlY5MWNta2lPaUpvZEhSd2N6b3ZMMk52YlcxMWJtbDBlUzVsZUdGdGNHeGxMM1l4TDI5cFpEUjJjQzl5WlhOd2IyNXpaUzgzWkRGbE5HTXlZU0lzSW5OMFlYUmxJam9pTjJReFpUUmpNbUVpZlE"
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:31Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z5gfJnNMyBDQDibKCkTc2VygXekvQKyA3yoQga9ugheHDMXDDR8ccAywh8XnDcUByhffqKsYGJjHXFfRtvmkUdRE2",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkhTPbkJ6JwtVgYLTq6hESXvXuSUKymUrEqmmVQjUC7aUQ#z6MkhTPbkJ6JwtVgYLTq6hESXvXuSUKymUrEqmmVQjUC7aUQ"
+  },
+  "recipient": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "type": "https://trusttasks.org/spec/keys/sign/0.1"
+}

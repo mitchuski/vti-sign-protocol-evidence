@@ -1,0 +1,12 @@
+[
+  {
+    "action": "keys.sign",
+    "actor": "did:key:z6MkhTPbkJ6JwtVgYLTq6hESXvXuSUKymUrEqmmVQjUC7aUQ",
+    "channel": "trust-task",
+    "contextId": "community",
+    "id": "d03d67aa-749e-4ba3-83af-aaf17e8f92ae",
+    "outcome": "success",
+    "resource": "verifier-p256",
+    "timestamp": 1793285011
+  }
+]

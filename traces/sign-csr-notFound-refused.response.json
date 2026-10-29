@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:2ad588a4-d4c7-46f1-bf66-cf2d1bf1efc0",
+  "issuedAt": "2026-10-29T14:43:31Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys:notFound",
+    "inResponseTo": {
+      "id": "urn:uuid:23045f2a-1c42-48d3-868c-3b2746b8ae01",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+    },
+    "message": "key no-such-key not found",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:31Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z26ZWTw9NS6RqYP2i6WUz7uTV6ZFbpKAyYanHtq8SBa5WVyJ24rWtXjML3PKwZ8ARkmEEZzjFy57Bnc5qHs6JKMy5",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkrzLVGt1DYmz58RfGbd2uQ8NPCTuUYQEDWMEsBFiYRHhk",
+  "threadId": "urn:uuid:23045f2a-1c42-48d3-868c-3b2746b8ae01",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

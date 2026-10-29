@@ -1,0 +1,21 @@
+{
+  "id": "urn:uuid:fc6293ab-6f07-41c7-a4c4-044ebb599439",
+  "issuedAt": "2026-10-29T14:43:31Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "algorithm": "ES256",
+    "keyId": "verifier-p256",
+    "signature": "ngHTaLrVL7DJmNSEmgl9HSr50E39mVYEB_HpTq40bwIX6z4RSN7BF8amubXVtMV5XLB1x9vcx_Va_b5j2kL02w"
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:31Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z2tF8fNicidRtQX2jMvM3eGygGm57rDiAJngXsDWbUHUp4KbeYMFciQsKuWHKNHZi4ueW1ykSyxFrW67HWXKYTSKw",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkhTPbkJ6JwtVgYLTq6hESXvXuSUKymUrEqmmVQjUC7aUQ",
+  "threadId": "urn:uuid:b7ac26c4-a4a0-4cc1-b55c-2518fa7c06d5",
+  "type": "https://trusttasks.org/spec/keys/sign/0.1#response"
+}

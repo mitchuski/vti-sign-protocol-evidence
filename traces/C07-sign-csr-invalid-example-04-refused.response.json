@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:2d90adea-9494-477f-b009-e4784cebc6bd",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "malformedRequest",
+    "inResponseTo": {
+      "id": "urn:uuid:563e7255-428e-47be-9554-858074a55006",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+    },
+    "message": "malformed request: payload does not conform to https://trusttasks.org/spec/keys/sign-csr/0.1: payload failed schema validation: \"cn\" is not one of \"CN\", \"O\" or 7 other candidates",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z5FYZxAPrczqkAvkrrYtkdN4tKYKhtFKbwLSw1TYoA96X1CtMjoqTHEkbZCYqBpAtUm1ycZBeePCFHW4sZitRXGCS",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:563e7255-428e-47be-9554-858074a55006",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

@@ -1,0 +1,49 @@
+# repo: OpenVTC/verifiable-trust-infrastructure @ 61c23f2091aab03d07271c142eabc0ba74dfe889 + uncommitted test-only additions (see patch/)
+# toolchain: cargo 1.98.1 (797e8a9bc 2026-08-05); rustc 1.98.1 (48a229cea 2026-09-01)
+# env: VTI_EVIDENCE_DIR=<bundle>/traces
+# cmd: cargo test -p vta-service --lib -- trust_tasks::keys::sign_protocol_tests --test-threads 1
+warning: unused import: `std::path::Path`
+  --> vti-common\src\backup_transfer\mod.rs:29:5
+   |
+29 | use std::path::Path;
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vti-common` (lib) generated 1 warning (run `cargo fix --lib -p vti-common` to apply 1 suggestion)
+warning: unused variable: `args`
+   --> vta-service\src\restore.rs:174:9
+    |
+174 |     let args: Vec<std::ffi::OsString> = std::env::args_os().skip(1).collect();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_args`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `vta-service` (lib) generated 1 warning (run `cargo fix --lib -p vta-service` to apply 1 suggestion)
+warning: `vta-service` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 30s
+     Running unittests src\lib.rs (target\debug\deps\vta_service-3d709d59068d3174.exe)
+
+running 18 tests
+test trust_tasks::keys::sign_protocol_tests::a_keys_sign_signature_does_not_verify_as_a_jws ... ok
+test trust_tasks::keys::sign_protocol_tests::an_unknown_or_out_of_scope_key_is_permission_denied_to_a_producer ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_csr_does_not_judge_whose_name_the_subject_is ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_csr_key_refusals_carry_the_declared_codes ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_csr_spec_example_info_is_reproduced ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_csr_spec_request_is_answered_with_a_verifiable_request ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_csr_subject_rules_are_refused_on_the_wire ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_csr_without_entitlement_is_permission_denied ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_ed25519_and_payload_base64url ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_forbidden_header_members_are_refused_on_the_wire ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_key_refusals_carry_the_declared_codes ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_payloads_that_cannot_be_signed_exactly_are_refused ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_purpose_restrictions_are_not_enforced_here ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_spec_example_verifies ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_spec_request_is_answered_with_a_verifiable_jws ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_unusable_registered_members_are_invalid_arguments ... ok
+test trust_tasks::keys::sign_protocol_tests::sign_jws_without_entitlement_is_permission_denied ... ok
+test trust_tasks::keys::sign_protocol_tests::the_specifications_invalid_examples_are_refused_by_the_vta ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 1771 filtered out; finished in 2.82s
+
+# exit=0

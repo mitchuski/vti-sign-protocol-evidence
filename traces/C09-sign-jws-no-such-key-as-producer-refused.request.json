@@ -1,0 +1,46 @@
+{
+  "id": "urn:uuid:4ec25dfa-355d-4aa3-80c4-b23aaa14d04a",
+  "issuedAt": "2026-10-29T14:43:31Z",
+  "issuer": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "payload": {
+    "header": {
+      "kid": "did:example:community-verifier#key-1",
+      "typ": "oauth-authz-req+jwt"
+    },
+    "keyId": "no-such-key",
+    "payload": {
+      "aud": "https://self-issued.me/v2",
+      "client_id": "decentralized_identifier:did:example:community-verifier",
+      "dcql_query": {
+        "credentials": [
+          {
+            "format": "dc+sd-jwt",
+            "id": "membership",
+            "meta": {
+              "vct_values": [
+                "https://credentials.example/membership"
+              ]
+            }
+          }
+        ]
+      },
+      "exp": 1791709500,
+      "iat": 1791709200,
+      "nonce": "q8vTt3yN5mQ0aW2f",
+      "response_mode": "direct_post.jwt",
+      "response_type": "vp_token",
+      "response_uri": "https://community.example/v1/oid4vp/response/7d1e4c2a",
+      "state": "7d1e4c2a"
+    }
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:31Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z1gt8Y2A5bhHD1KtJh2MpxmAbDJBoY7CGCkqR9DJhB3GsJxZpN8GLiGTqKmA9rYUCLS5ejyQTq3nm61nPZ6EE8qp",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL#z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL"
+  },
+  "recipient": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "type": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+}

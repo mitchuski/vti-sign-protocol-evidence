@@ -1,0 +1,30 @@
+{
+  "id": "urn:uuid:26d538c5-7d4a-4b89-9741-c7feb208c4f6",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys/sign-csr:subjectInvalid",
+    "details": {
+      "index": 1,
+      "member": "subject",
+      "reason": "C must be an ISO 3166-1 alpha-2 code, e.g. DE"
+    },
+    "inResponseTo": {
+      "id": "urn:uuid:930074b0-7722-4505-9ba9-c0f99123d221",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+    },
+    "message": "C must be an ISO 3166-1 alpha-2 code, e.g. DE",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "zhn7eo7Pgpv29dFTMvnsnkbWzrSfx7wrm5Up9PT8cus6WFx2C4s1mUsP54qgf9s5UTEqWunH5GhbBobzG7qZeaCQ",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:930074b0-7722-4505-9ba9-c0f99123d221",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

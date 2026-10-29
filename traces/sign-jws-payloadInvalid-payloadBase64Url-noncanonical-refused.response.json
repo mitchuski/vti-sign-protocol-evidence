@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:d59d64a3-7582-453c-a0b6-f89f86528670",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys/sign-jws:payloadInvalid",
+    "inResponseTo": {
+      "id": "urn:uuid:006606e0-e822-4171-ad66-ca4e7773072d",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+    },
+    "message": "payloadBase64Url is not the canonical unpadded base64url of any byte string",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z4hbU9pjAD7UNvHvgKdmhUaNU9qnMwYmPQpnC6WSVWsEHYnyVCm9FvGHshPnTUcZZLDk866Y6ksvN4sGuz3PEycya",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:006606e0-e822-4171-ad66-ca4e7773072d",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

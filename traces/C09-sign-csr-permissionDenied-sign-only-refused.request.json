@@ -1,0 +1,44 @@
+{
+  "id": "urn:uuid:4bf94398-a768-4b3b-84f8-a9beb1b5dc8d",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6Mkkc24aWH6Lrj4bqjG3q41v3Smcw9DdhMz4NgdrJ7iw4sX",
+  "payload": {
+    "keyId": "eudi-access-p256",
+    "subject": [
+      {
+        "type": "C",
+        "value": "DE"
+      },
+      {
+        "type": "O",
+        "value": "Example Community e.V."
+      },
+      {
+        "type": "organizationIdentifier",
+        "value": "LEIXG-5299000EXAMPLE000001"
+      },
+      {
+        "type": "CN",
+        "value": "Example Community Verifier"
+      }
+    ],
+    "subjectAltNames": {
+      "dns": [
+        "verifier.community.example"
+      ],
+      "uri": [
+        "https://verifier.community.example"
+      ]
+    }
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z4idLfEqYkRBxgkYCids1RfV7XuxfN5tQzW8p2V6rfqr1DwN5ecVK11bzYXnPBVFgFpciVs2q7AZA7x8ayoeKxM9F",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6Mkkc24aWH6Lrj4bqjG3q41v3Smcw9DdhMz4NgdrJ7iw4sX#z6Mkkc24aWH6Lrj4bqjG3q41v3Smcw9DdhMz4NgdrJ7iw4sX"
+  },
+  "recipient": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "type": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+}

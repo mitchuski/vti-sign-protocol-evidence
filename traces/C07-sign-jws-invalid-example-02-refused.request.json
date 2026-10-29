@@ -1,0 +1,20 @@
+{
+  "id": "urn:uuid:3e974712-c13b-4191-b5ce-98727738941d",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "payload": {
+    "payload": {
+      "nonce": "q8vTt3yN5mQ0aW2f"
+    }
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z4KE5tAvQwwioGdxiY9BaTiA1par6M6gkwQjpQ64J2W111uUvWPHbpbkXt6LYgTkR3eYuL2Gc5F6X2urtcLBhdPwT",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL#z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL"
+  },
+  "recipient": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "type": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+}

@@ -1,0 +1,30 @@
+{
+  "id": "urn:uuid:0f034b0f-7d87-4075-b87c-4c8d4da18cae",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys/sign-csr:subjectInvalid",
+    "details": {
+      "index": 1,
+      "member": "subject",
+      "reason": "serialNumber must use the PrintableString characters only"
+    },
+    "inResponseTo": {
+      "id": "urn:uuid:0ff43bbd-9ce3-4919-98ad-263823c97b88",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+    },
+    "message": "serialNumber must use the PrintableString characters only",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z4RBjGGcSyH5fhREJUWHnDd8RdzQr7u7kpydNfSUtBxabvrBjGxFz6mjCAKmaGbHz6WLQ9Jv5iKGhX4ex1YhamvDp",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:0ff43bbd-9ce3-4919-98ad-263823c97b88",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

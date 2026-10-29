@@ -1,0 +1,23 @@
+# cwd: trustoverip/dtgwg-trust-tasks-tf @ adf094757cf822702d9b1c2b6093db5531b7aa94 (tag trust-tasks-rs-v0.36.1, the trust-tasks-rs version VTI's Cargo.lock pins)
+# toolchain: cargo 1.98.1 (797e8a9bc 2026-08-05); rustc 1.98.1 (48a229cea 2026-09-01)
+# cmd: cargo test -p trust-tasks-rs --no-default-features --features keys,validate --test conformance -- keys::sign_jws keys::sign_csr
+ Downloading crates ...
+  Downloaded jsonschema v0.46.5
+  Downloaded num-iter v0.1.45
+  Downloaded referencing v0.46.5
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 24.83s
+     Running tests\conformance\main.rs (target\debug\deps\conformance-1f0100792114a25d.exe)
+
+running 8 tests
+test keys::sign_csr::v0_1::response_example_1 ... ok
+test keys::sign_csr::v0_1::request_example_1 ... ok
+test keys::sign_jws::v0_1::request_example_1 ... ok
+test keys::sign_jws::v0_1::response_example_1 ... ok
+test keys::sign_jws::v0_1::rejects_invalid_response_examples ... ok
+test keys::sign_csr::v0_1::rejects_invalid_response_examples ... ok
+test keys::sign_jws::v0_1::rejects_invalid_examples ... ok
+test keys::sign_csr::v0_1::rejects_invalid_examples ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.13s
+
+# exit=0

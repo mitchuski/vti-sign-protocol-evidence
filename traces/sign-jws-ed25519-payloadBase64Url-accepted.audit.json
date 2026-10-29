@@ -1,0 +1,13 @@
+[
+  {
+    "action": "keys.sign-jws",
+    "actor": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+    "channel": "trust-task",
+    "contextId": "community",
+    "detail": "alg=EdDSA typ=example+jwt sha256=abb9177404d734128297ca03c0ee89bf304d44fd32309b548efa54196dffb564",
+    "id": "c427d8d9-3d2a-4d04-a2ca-6c1cf7a5e2b3",
+    "outcome": "success",
+    "resource": "verifier-ed25519",
+    "timestamp": 1793285012
+  }
+]

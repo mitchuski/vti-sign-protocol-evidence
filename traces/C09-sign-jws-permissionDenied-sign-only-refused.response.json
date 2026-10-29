@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:1945012b-5932-4347-a2c8-6de74eabda76",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "permissionDenied",
+    "inResponseTo": {
+      "id": "urn:uuid:9f7f6b30-e65a-407b-bc34-02cf51c2052f",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+    },
+    "message": "permission denied: forbidden: keys/sign-jws denied: did:key:z6Mkkc24aWH6Lrj4bqjG3q41v3Smcw9DdhMz4NgdrJ7iw4sX does not carry the sign-jws capability",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z4HU9gnYDrBiQuzqtXW2LyjFGhchMW6veis8JnPP47mBv5JWnjGLkEmyetjF8a9dCTLhoaC9Aw4Fy65NUrhkh2hBc",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6Mkkc24aWH6Lrj4bqjG3q41v3Smcw9DdhMz4NgdrJ7iw4sX",
+  "threadId": "urn:uuid:9f7f6b30-e65a-407b-bc34-02cf51c2052f",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

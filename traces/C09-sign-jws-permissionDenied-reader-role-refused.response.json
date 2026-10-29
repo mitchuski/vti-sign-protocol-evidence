@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:3a5a450f-0626-437f-ba02-b46eba6695a6",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "permissionDenied",
+    "inResponseTo": {
+      "id": "urn:uuid:25432ecb-246e-4c54-aba3-80f64d299ff6",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+    },
+    "message": "permission denied: forbidden: application role or higher required",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "zvu2GHxsUxmmUSrs2eva36guV459HFFYqsGKoMnFoVG4wSfKAu7jFTfcRLWEtQk9cUQdBJVmKaM4L7kLmn1UfxG3",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkkCWxm7r858s4P8uHCZ6LJ8PHChWDEFrod2Yg3UwoSktg",
+  "threadId": "urn:uuid:25432ecb-246e-4c54-aba3-80f64d299ff6",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

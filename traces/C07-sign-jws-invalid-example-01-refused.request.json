@@ -1,0 +1,22 @@
+{
+  "id": "urn:uuid:ea2273c3-1d26-4cee-9ee9-1a4a107fdec5",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "payload": {
+    "keyId": "verifier-p256",
+    "payload": {
+      "nonce": "q8vTt3yN5mQ0aW2f"
+    },
+    "payloadBase64Url": "eyJub25jZSI6InE4dlR0M3lONW1RMGFXMmYifQ"
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z4jW3wNWiYZ7UX19Q2qmkHpUQsHUjXTLg9mETdF63gGozPQjhmUTpMb58ih6rcJ2iLZP4qFXxgz21Pebz12YPLbw7",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL#z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL"
+  },
+  "recipient": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "type": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:af580e2c-a252-44cf-8a58-5afb9c0c9a38",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "malformedRequest",
+    "inResponseTo": {
+      "id": "urn:uuid:e01674f7-6b9d-48a5-9550-655953cd3a44",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+    },
+    "message": "malformed request: payload does not conform to https://trusttasks.org/spec/keys/sign-csr/0.1: payload failed schema validation: Additional properties are not allowed ('also' was unexpected)",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z5X8a2oe6HpPTcMpkwTi1gxb6keCaZVYWAiEJE4pob7rtbM5Li7MCCHdF9kgkXccZF4HpX8EJRTfSyxs5VPCbUPYq",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:e01674f7-6b9d-48a5-9550-655953cd3a44",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

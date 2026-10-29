@@ -1,0 +1,25 @@
+{
+  "id": "urn:uuid:aa8f5e83-3896-4e8c-9e13-d2eb76745abf",
+  "issuedAt": "2026-10-29T14:43:31Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "permissionDenied",
+    "inResponseTo": {
+      "id": "urn:uuid:4ae2268e-8800-4fca-acb7-b038e97c23bd",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+    },
+    "message": "permission denied: forbidden: key `elsewhere-p256` is not within the caller's scope",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:31Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z4uinSXMc88fKPYodCBbVmgE3evgcS2c6Eix991Gne3ALJRq5gfJaZRtJWo1CJmHmcm1CRiimddg3ZLk9wayusGf4",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:4ae2268e-8800-4fca-acb7-b038e97c23bd",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

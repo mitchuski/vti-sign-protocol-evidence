@@ -1,0 +1,21 @@
+{
+  "id": "urn:uuid:d38eeca0-bb42-4ea3-a7a4-27fb52898493",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "csr": "-----BEGIN CERTIFICATE REQUEST-----\nMIIBkTCCATYCAQAweDELMAkGA1UEBhMCREUxHzAdBgNVBAoMFkV4YW1wbGUgQ29t\nbXVuaXR5IGUuVi4xIzAhBgNVBGEMGkxFSVhHLTUyOTkwMDBFWEFNUExFMDAwMDAx\nMSMwIQYDVQQDDBpFeGFtcGxlIENvbW11bml0eSBWZXJpZmllcjBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABOcpeo0cfn+gFtzcdU+dyY6+mdbLPD/3A+oq88JWX0ug\nU5yaXBs0PhTFvKboE3VBADW91ssJJCXHSMp2aMKMt7mgXDBaBgkqhkiG9w0BCQ4x\nTTBLMEkGA1UdEQRCMECCGnZlcmlmaWVyLmNvbW11bml0eS5leGFtcGxlhiJodHRw\nczovL3ZlcmlmaWVyLmNvbW11bml0eS5leGFtcGxlMAoGCCqGSM49BAMCA0kAMEYC\nIQCw7baoRjVUKXl/jD49ZjkbhJ7hMyXndxYLpgdBF/vzUQIhALO9AEmy+PMBIKwj\ncPSz31BjoLO9N1pHVzudUw0F+W6b\n-----END CERTIFICATE REQUEST-----\n",
+    "keyId": "verifier-p256",
+    "publicKey": "zDnaeyDeH8jecAznPvoZPXf42nNLTFTurs5s9Hv1XXjwvC2Yo"
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z2Vm1ttteKdwQG7YeHRBGsgMwZEBRHGHUJEGZVvzUm98DF3ZzniU2QRp9pxMXLA7brN6da76fgeLyGPYH39TrRqAp",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:97ce9a5a-c2fc-4190-9c16-34772c306d68",
+  "type": "https://trusttasks.org/spec/keys/sign-csr/0.1#response"
+}

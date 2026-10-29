@@ -1,0 +1,28 @@
+{
+  "id": "urn:uuid:731fa8d2-574a-457c-8d56-775fa4f8e28f",
+  "issuedAt": "2026-10-29T14:43:32Z",
+  "issuer": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "payload": {
+    "code": "keys/sign-jws:headerMemberForbidden",
+    "details": {
+      "member": "b64"
+    },
+    "inResponseTo": {
+      "id": "urn:uuid:0d75abdb-f576-4bac-9d79-5608a17f1b00",
+      "typeUri": "https://trusttasks.org/spec/keys/sign-jws/0.1"
+    },
+    "message": "the custodian sets or refuses header member `b64`",
+    "retryable": false
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:32Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "authentication",
+    "proofValue": "z5osiRS6fVSsoYLg5j1chhSYtUvRREuGyiaXkTyCoA5UqzuQvigX8tUaoRc8svrqa4ZUzYzamhKP3zeRd6bHUBqA4",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa#z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa"
+  },
+  "recipient": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "threadId": "urn:uuid:0d75abdb-f576-4bac-9d79-5608a17f1b00",
+  "type": "https://trusttasks.org/spec/trust-task-error/0.6"
+}

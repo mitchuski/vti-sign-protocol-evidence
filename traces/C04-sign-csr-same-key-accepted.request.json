@@ -1,0 +1,44 @@
+{
+  "id": "urn:uuid:97ce9a5a-c2fc-4190-9c16-34772c306d68",
+  "issuedAt": "2026-10-29T14:43:33Z",
+  "issuer": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL",
+  "payload": {
+    "keyId": "verifier-p256",
+    "subject": [
+      {
+        "type": "C",
+        "value": "DE"
+      },
+      {
+        "type": "O",
+        "value": "Example Community e.V."
+      },
+      {
+        "type": "organizationIdentifier",
+        "value": "LEIXG-5299000EXAMPLE000001"
+      },
+      {
+        "type": "CN",
+        "value": "Example Community Verifier"
+      }
+    ],
+    "subjectAltNames": {
+      "dns": [
+        "verifier.community.example"
+      ],
+      "uri": [
+        "https://verifier.community.example"
+      ]
+    }
+  },
+  "proof": {
+    "created": "2026-10-29T14:43:33Z",
+    "cryptosuite": "eddsa-jcs-2022",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z2e4WQW5vaFEGBYZegAmjAYjQ38BousU6ZRoqZfYA41k83fgXXQ4USiBWsRMgUCv7hYKpguXstSCHxFWha5qy3VHh",
+    "type": "DataIntegrityProof",
+    "verificationMethod": "did:key:z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL#z6MkujLyD89RJL4XtdkmJ4VGgHAa8XHmp5PtzjQ3Xh4bJmqL"
+  },
+  "recipient": "did:key:z6MkwC4jQ5EyrAUM4cZrXLebMC7SaTDt8HT2p1Qr2M9tQMfa",
+  "type": "https://trusttasks.org/spec/keys/sign-csr/0.1"
+}
